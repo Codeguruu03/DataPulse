@@ -34,11 +34,14 @@ from datapulse.cli.validate import validate
 from datapulse.cli.transform import transform
 from datapulse.cli.warehouse import warehouse
 from datapulse.cli.pipeline import pipeline
+from datapulse.cli.serve import serve
 cli.add_command(generate)
 cli.add_command(validate)
 cli.add_command(transform)
 cli.add_command(warehouse)
 cli.add_command(pipeline)
+cli.add_command(serve)
+
 
 
 @cli.command()

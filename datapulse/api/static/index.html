@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataPulse — Data Quality & Analytics Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar / Top Navigation -->
+    <header class="header-nav">
+      <div class="brand">
+        <div class="logo-icon">⚡</div>
+        <div class="brand-text">
+          <h1>DataPulse</h1>
+          <span>Quality-Aware Cloud Data Platform</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="badge mode-badge" id="modeBadge">LOCAL MODE</div>
+        <button class="btn btn-primary" id="btnTriggerModal">🚀 Run Pipeline</button>
+        <a href="/docs" target="_blank" class="btn btn-secondary">API Docs ↗</a>
+      </div>
+    </header>
+
+    <!-- Executive Metrics Grid -->
+    <section class="kpi-grid">
+      <div class="kpi-card glass">
+        <div class="kpi-icon icon-revenue">₹</div>
+        <div class="kpi-content">
+          <span class="kpi-label">Gross Revenue</span>
+          <h2 class="kpi-value" id="kpiRevenue">₹0.00</h2>
+          <span class="kpi-trend positive">+14.2% vs last cycle</span>
+        </div>
+      </div>
+
+      <div class="kpi-card glass">
+        <div class="kpi-icon icon-orders">📦</div>
+        <div class="kpi-content">
+          <span class="kpi-label">Total Valid Orders</span>
+          <h2 class="kpi-value" id="kpiOrders">0</h2>
+          <span class="kpi-trend neutral">Fact Orders loaded</span>
+        </div>
+      </div>
+
+      <div class="kpi-card glass">
+        <div class="kpi-icon icon-customers">👥</div>
+        <div class="kpi-content">
+          <span class="kpi-label">Active Customers</span>
+          <h2 class="kpi-value" id="kpiCustomers">0</h2>
+          <span class="kpi-trend positive">Dim Customers</span>
+        </div>
+      </div>
+
+      <div class="kpi-card glass">
+        <div class="kpi-icon icon-aov">💎</div>
+        <div class="kpi-content">
+          <span class="kpi-label">Avg Order Value</span>
+          <h2 class="kpi-value" id="kpiAov">₹0.00</h2>
+          <span class="kpi-trend neutral">Per transaction</span>
+        </div>
+      </div>
+
+      <div class="kpi-card glass highlight-card">
+        <div class="kpi-icon icon-quality">🛡️</div>
+        <div class="kpi-content">
+          <span class="kpi-label">Quality Gate Score</span>
+          <h2 class="kpi-value text-accent" id="kpiQuality">0.0%</h2>
+          <span class="kpi-trend text-accent" id="kpiQualityStatus">Checking...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Analytics & Charts Grid -->
+    <main class="dashboard-grid">
+      <!-- Monthly Revenue Chart -->
+      <div class="panel glass chart-panel-large">
+        <div class="panel-header">
+          <h3>📈 Monthly Revenue & Order Volume</h3>
+          <span class="panel-subtitle">Aggregated from Star Schema Warehouse (v_mart_monthly_revenue)</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="monthlyRevenueChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Top Products & Segments -->
+      <div class="panel glass chart-panel-medium">
+        <div class="panel-header">
+          <h3>🏆 Top Products by Revenue</h3>
+          <span class="panel-subtitle">Dimension product margins & gross sales</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="topProductsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Customer Segments Breakdown -->
+      <div class="panel glass chart-panel-medium">
+        <div class="panel-header">
+          <h3>🎯 Customer Segments & Tiers</h3>
+          <span class="panel-subtitle">RFM segmentation breakdown</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="customerSegmentsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Data Quality & Quarantine Inspector -->
+      <div class="panel glass full-width">
+        <div class="panel-header">
+          <div class="title-with-badge">
+            <h3>🛡️ Quarantine Zone & Error Audit</h3>
+            <span class="badge badge-warning" id="quarantineCountBadge">0 Records</span>
+          </div>
+          <span class="panel-subtitle">Corrupted records intercepted by Quality Gate before reaching Warehouse</span>
+        </div>
+        <div class="table-container">
+          <table class="data-table" id="quarantineTable">
+            <thead>
+              <tr>
+                <th>Quarantine ID</th>
+                <th>Order ID</th>
+                <th>Customer ID</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Order Date</th>
+                <th>Violated Quality Rules</th>
+              </tr>
+            </thead>
+            <tbody id="quarantineBody">
+              <tr>
+                <td colspan="7" class="text-center">Loading quarantine data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Pipeline Trigger Modal -->
+  <div class="modal-overlay" id="pipelineModal">
+    <div class="modal glass">
+      <div class="modal-header">
+        <h3>🚀 Execute DataPulse Pipeline</h3>
+        <button class="btn-close" id="btnCloseModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Quality Gate Threshold: <span id="thresholdVal" class="text-accent">95.0%</span></label>
+          <input type="range" id="inputThreshold" min="80" max="99" value="95" step="1">
+          <small>Minimum required clean record percentage to pass gate and load warehouse.</small>
+        </div>
+
+        <div class="form-group">
+          <label>Synthetic Anomaly Rate: <span id="anomalyVal" class="text-accent">5.0%</span></label>
+          <input type="range" id="inputAnomaly" min="0" max="30" value="5" step="1">
+          <small>Injected corruption rate (null keys, negative prices, broken dates, orphan foreign keys).</small>
+        </div>
+
+        <div class="pipeline-progress" id="pipelineProgress" style="display: none;">
+          <div class="spinner"></div>
+          <p id="pipelineStatusText">Executing multi-stage pipeline...</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelModal">Cancel</button>
+        <button class="btn btn-primary" id="btnStartPipeline">Start Pipeline Execution</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
