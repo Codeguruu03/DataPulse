@@ -1,0 +1,13 @@
+product_id,sku,product_name,category,unit_price,cost_price,in_stock
+P-PRD-101,PRD-101,MacBook Pro 16,Hardware,2499.0,1800.0,249
+P-PRD-102,PRD-102,Dell UltraSharp 32 4K,Hardware,899.0,620.0,465
+P-PRD-103,PRD-103,Ergonomic Mechanical Keyboard,Accessories,189.0,95.0,489
+P-PRD-104,PRD-104,Wireless Noise-Canceling Headset,Accessories,299.0,150.0,484
+P-PRD-105,PRD-105,Enterprise Cloud Database License,Software,4500.0,500.0,213
+P-PRD-106,PRD-106,Security Endpoint Protection Sub,Software,1200.0,200.0,212
+P-PRD-107,PRD-107,4K Ultra-HD Webcam,Accessories,199.0,110.0,61
+P-PRD-108,PRD-108,Executive Standing Desk,Furniture,750.0,420.0,369
+P-PRD-109,PRD-109,Mesh High-Back Ergonomic Chair,Furniture,550.0,310.0,358
+P-PRD-110,PRD-110,AI Analytics Enterprise SaaS,Software,3500.0,400.0,467
+P-PRD-111,PRD-111,USB-C Dual 4K Docking Station,Hardware,249.0,130.0,296
+P-PRD-112,PRD-112,Portable SSD 2TB Rugged,Storage,179.0,95.0,88

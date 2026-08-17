@@ -9,11 +9,15 @@ from datetime import datetime
 from typing import Dict, Any, Optional, Tuple
 
 from datapulse.config import settings
+from datapulse.storage.base import BaseStorage
+from datapulse.storage.factory import get_storage_client
+from datapulse.warehouse.db import DatabaseManager, default_db_manager
 from datapulse.generator.generator import DataPulseGenerator
 from datapulse.quality.gate import DataQualityGate
 from datapulse.transforms.pipeline import LakehouseTransformPipeline
 from datapulse.warehouse.loader import WarehouseLoader
 from datapulse.utils.logger import get_logger
+
 
 logger = get_logger("datapulse.orchestration.runner")
 
@@ -26,10 +30,14 @@ class PipelineRunner:
         quality_threshold: Optional[float] = None,
         auto_generate: bool = True,
         anomaly_rate: float = 0.05,
+        storage: Optional[BaseStorage] = None,
+        db_mgr: Optional[DatabaseManager] = None,
     ):
-        self.threshold = quality_threshold or settings.QUALITY_THRESHOLD_PERCENT
+        self.threshold = quality_threshold if quality_threshold is not None else settings.QUALITY_THRESHOLD_PERCENT
         self.auto_generate = auto_generate
         self.anomaly_rate = anomaly_rate
+        self.storage = storage or get_storage_client()
+        self.db_mgr = db_mgr or default_db_manager
 
     def run(self, run_id: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -58,10 +66,12 @@ class PipelineRunner:
         # Stage 1: Ingestion / Generation
         logger.info(">>> [Stage 1/5] Ingestion & Raw Staging...")
         t0 = time.time()
-        raw_cust = settings.RAW_DATA_PATH / "customers.csv"
-        if not raw_cust.exists() or self.auto_generate:
+        raw_cust_file = self.storage.base_path / "raw" / "customers.csv" if hasattr(self.storage, "base_path") else settings.RAW_DATA_PATH / "customers.csv"
+        raw_dir = self.storage.base_path / "raw" if hasattr(self.storage, "base_path") else settings.RAW_DATA_PATH
+
+        if not raw_cust_file.exists() or self.auto_generate:
             gen = DataPulseGenerator(anomaly_rate=self.anomaly_rate)
-            c, p, o = gen.generate_all_and_save()
+            c, p, o = gen.generate_all_and_save(output_dir=raw_dir)
             run_result["stages"]["ingestion"] = {
                 "status": "SUCCESS",
                 "duration_sec": round(time.time() - t0, 2),
@@ -77,7 +87,7 @@ class PipelineRunner:
         # Stage 2: Quality Gate Evaluation
         logger.info(">>> [Stage 2/5] Data Quality Gate Evaluation...")
         t1 = time.time()
-        gate = DataQualityGate(quality_threshold=self.threshold)
+        gate = DataQualityGate(storage=self.storage, quality_threshold=self.threshold)
         passed, gate_summary, valid_datasets = gate.evaluate_pipeline_batch(run_id=batch_id)
 
         run_result["stages"]["quality_gate"] = {
@@ -95,20 +105,20 @@ class PipelineRunner:
         if not passed:
             logger.error(
                 f"[CIRCUIT BREAKER TRIGGERED] Quality score ({gate_summary.overall_quality_score:.2f}%) "
-                f"fell below required threshold ({self.threshold}%). Downstream pipeline halted."
+                f"fell below required threshold ({self.threshold}%). Halting pipeline."
             )
             run_result["status"] = "BLOCKED_BY_QUALITY_GATE"
-            run_result["end_time"] = datetime.utcnow().isoformat()
-            run_result["total_duration_sec"] = round(time.time() - start_time, 2)
+            run_result["completed_at"] = datetime.utcnow().isoformat()
+            run_result["duration_total_sec"] = round(time.time() - start_time, 2)
             return run_result
 
         run_result["stages"]["circuit_breaker"] = {"status": "PASSED", "verdict": "ALLOW_DOWNSTREAM"}
 
-        # Stage 4: Lakehouse Parquet Transformation
+        # Stage 4: Spark Lakehouse Transformation
         logger.info(">>> [Stage 4/5] Lakehouse Parquet Transformation & Partitioning...")
         t2 = time.time()
-        transform_pipeline = LakehouseTransformPipeline()
-        manifest = transform_pipeline.process_and_publish_lake(valid_datasets, run_id=batch_id)
+        pipeline = LakehouseTransformPipeline(storage=self.storage)
+        manifest = pipeline.process_and_publish_lake(valid_datasets, run_id=batch_id)
 
         run_result["stages"]["transformation"] = {
             "status": "SUCCESS",
@@ -120,7 +130,7 @@ class PipelineRunner:
         # Stage 5: Warehouse Ingestion
         logger.info(">>> [Stage 5/5] Star Schema Warehouse Ingestion...")
         t3 = time.time()
-        loader = WarehouseLoader()
+        loader = WarehouseLoader(db_mgr=self.db_mgr, storage=self.storage)
         load_stats = loader.load_lakehouse_to_warehouse(run_id=batch_id)
 
         run_result["stages"]["warehouse_load"] = {

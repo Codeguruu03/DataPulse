@@ -51,9 +51,33 @@ class DataQualityGate:
         batch_id = run_id or f"run-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6]}"
         start_time = datetime.utcnow()
 
-        c_path = raw_customers_path or f"{settings.RAW_DATA_PATH}/customers.csv"
-        p_path = raw_products_path or f"{settings.RAW_DATA_PATH}/products.csv"
-        o_path = raw_orders_path or f"{settings.RAW_DATA_PATH}/orders.csv"
+        if raw_customers_path:
+            c_path = raw_customers_path
+        elif self.storage.exists("raw/customers.csv"):
+            c_path = "raw/customers.csv"
+        elif self.storage.exists("data/raw/customers.csv"):
+            c_path = "data/raw/customers.csv"
+        else:
+            c_path = str(settings.RAW_DATA_PATH / "customers.csv")
+
+        if raw_products_path:
+            p_path = raw_products_path
+        elif self.storage.exists("raw/products.csv"):
+            p_path = "raw/products.csv"
+        elif self.storage.exists("data/raw/products.csv"):
+            p_path = "data/raw/products.csv"
+        else:
+            p_path = str(settings.RAW_DATA_PATH / "products.csv")
+
+        if raw_orders_path:
+            o_path = raw_orders_path
+        elif self.storage.exists("raw/orders.csv"):
+            o_path = "raw/orders.csv"
+        elif self.storage.exists("data/raw/orders.csv"):
+            o_path = "data/raw/orders.csv"
+        else:
+            o_path = str(settings.RAW_DATA_PATH / "orders.csv")
+
 
         logger.info(f"Initiating Data Quality Gate evaluation for batch [{batch_id}]...")
 
