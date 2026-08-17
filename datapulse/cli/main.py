@@ -35,12 +35,17 @@ from datapulse.cli.transform import transform
 from datapulse.cli.warehouse import warehouse
 from datapulse.cli.pipeline import pipeline
 from datapulse.cli.serve import serve
+from datapulse.cli.advanced import show_lineage, check_evolution, replay_pipeline
 cli.add_command(generate)
 cli.add_command(validate)
 cli.add_command(transform)
 cli.add_command(warehouse)
 cli.add_command(pipeline)
 cli.add_command(serve)
+cli.add_command(show_lineage)
+cli.add_command(check_evolution)
+cli.add_command(replay_pipeline)
+
 
 
 
