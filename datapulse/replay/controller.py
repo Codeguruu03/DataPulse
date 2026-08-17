@@ -21,8 +21,13 @@ logger = get_logger("datapulse.replay.controller")
 class PipelineReplayController:
     """Controls selective re-execution of data pipeline stages."""
 
-    def __init__(self, storage: Optional[BaseStorage] = None):
+    def __init__(
+        self,
+        storage: Optional[BaseStorage] = None,
+        db_mgr: Optional[Any] = None,
+    ):
         self.storage = storage or get_storage_client()
+        self.db_mgr = db_mgr
 
     def replay_from_validation(
         self,
@@ -58,7 +63,7 @@ class PipelineReplayController:
         manifest = pipeline.process_and_publish_lake(valid_datasets, run_id=replay_run_id)
 
         # Load Warehouse
-        loader = WarehouseLoader(storage=self.storage)
+        loader = WarehouseLoader(db_mgr=self.db_mgr, storage=self.storage)
         load_stats = loader.load_lakehouse_to_warehouse(run_id=replay_run_id)
 
         logger.info(f"Pipeline replay for run [{replay_run_id}] completed successfully.")

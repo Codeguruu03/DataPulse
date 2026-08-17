@@ -54,13 +54,15 @@ def test_schema_evolution_detector():
 def test_pipeline_replay_execution(tmp_path: Path):
     from datapulse.storage.local import LocalStorage
     from datapulse.generator.generator import DataPulseGenerator
+    from datapulse.warehouse.db import DatabaseManager
 
     storage = LocalStorage(base_path=str(tmp_path))
+    db_mgr = DatabaseManager(db_url=f"sqlite:///{tmp_path}/test_dw.db")
     gen = DataPulseGenerator(anomaly_rate=0.05, seed=10)
     raw_dir = tmp_path / "raw"
     c_f, p_f, o_f = gen.generate_all_and_save(output_dir=raw_dir, num_orders=100, num_customers=30)
 
-    controller = PipelineReplayController(storage=storage)
+    controller = PipelineReplayController(storage=storage, db_mgr=db_mgr)
     res = controller.replay_from_validation(
         replay_run_id="replay-test-001",
         threshold=90.0,

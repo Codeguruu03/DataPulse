@@ -39,7 +39,7 @@ jobs:
           WAREHOUSE_BACKEND: sqlite
           SPARK_LOCAL_IP: 127.0.0.1
         run: |
-          python -m pytest -v --tb=short
+          python -m pytest -v --tb=short -rA
 
       - name: Execute CLI Smoke Test
         env:

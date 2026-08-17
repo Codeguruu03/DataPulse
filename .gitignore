@@ -45,6 +45,7 @@ htmlcov/
 data/raw/*.csv
 data/raw/*.json
 data/processed/**/*.parquet
+data/processed/*.json
 data/quarantine/*.csv
 data/quarantine/*.json
 raw/
