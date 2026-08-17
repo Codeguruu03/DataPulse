@@ -33,10 +33,12 @@ from datapulse.cli.generate import generate
 from datapulse.cli.validate import validate
 from datapulse.cli.transform import transform
 from datapulse.cli.warehouse import warehouse
+from datapulse.cli.pipeline import pipeline
 cli.add_command(generate)
 cli.add_command(validate)
 cli.add_command(transform)
 cli.add_command(warehouse)
+cli.add_command(pipeline)
 
 
 @cli.command()

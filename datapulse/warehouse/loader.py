@@ -113,9 +113,16 @@ class WarehouseLoader:
             # 3. Load Fact Orders
             if self.storage.exists(orders_parquet_dir):
                 df_orders = self.storage.read_parquet(orders_parquet_dir)
-                existing_order_ids = list(set(df_orders["order_id"]))
-                session.query(FactOrder).filter(FactOrder.order_id.in_(existing_order_ids)).delete(synchronize_session=False)
+                # Ensure unique order_ids in memory
+                df_orders = df_orders.drop_duplicates(subset=["order_id"]).copy()
+                existing_order_ids = list(df_orders["order_id"])
 
+                # Delete existing in chunks of 500 to avoid SQLite parameter limit
+                chunk_size = 500
+                for i in range(0, len(existing_order_ids), chunk_size):
+                    chunk_ids = existing_order_ids[i:i + chunk_size]
+                    session.query(FactOrder).filter(FactOrder.order_id.in_(chunk_ids)).delete(synchronize_session=False)
+                session.commit()
 
                 order_objects = []
                 for _, row in df_orders.iterrows():
@@ -123,23 +130,24 @@ class WarehouseLoader:
                     date_key = int(order_dt.strftime("%Y%m%d"))
                     order_objects.append(
                         FactOrder(
-                            order_id=row["order_id"],
-                            customer_id=row["customer_id"],
-                            product_id=row["product_id"],
+                            order_id=str(row["order_id"]),
+                            customer_id=str(row["customer_id"]),
+                            product_id=str(row["product_id"]),
                             date_key=date_key,
                             order_date=order_dt.to_pydatetime(),
                             quantity=int(row["quantity"]),
                             unit_price=float(row["unit_price"]),
                             discount_rate=float(row.get("discount_rate", 0.0)),
                             total_amount=float(row["total_amount"]),
-                            order_status=row["order_status"],
-                            payment_method=row["payment_method"],
+                            order_status=str(row["order_status"]),
+                            payment_method=str(row["payment_method"]),
                         )
                     )
                 session.bulk_save_objects(order_objects)
                 session.commit()
                 load_stats["orders_loaded"] = len(order_objects)
                 logger.info(f"Loaded {len(order_objects)} order facts into fact_orders.")
+
 
             # 4. Load Quality & Quarantine Audit logs if present
             quarantine_dir = str(settings.QUARANTINE_DATA_PATH)
