@@ -57,25 +57,34 @@ class WarehouseLoader:
             # 1. Load Dimensions (Customers)
             if self.storage.exists(cust_parquet):
                 df_cust = self.storage.read_parquet(cust_parquet)
+                # Coerce all NOT NULL string columns to str, replacing NaN with fallback values
+                # This guards against Linux PyArrow Parquet reads producing NaN for string columns
+                df_cust["customer_id"] = df_cust["customer_id"].fillna("").astype(str).str.strip()
+                df_cust["name"] = df_cust["name"].fillna("Unknown").astype(str).str.strip()
+                df_cust["email"] = df_cust["email"].fillna("").astype(str).str.strip()
+                df_cust["country"] = df_cust["country"].fillna("Other").astype(str).str.strip()
+                df_cust["segment"] = df_cust["segment"].fillna("Consumer").astype(str).str.strip()
+                # Drop rows with empty required fields that would fail NOT NULL constraints
+                df_cust = df_cust[df_cust["customer_id"].str.len() > 0].copy()
                 # Idempotent: delete existing IDs before re-inserting
                 existing_ids = list(set(df_cust["customer_id"]))
                 session.query(DimCustomer).filter(DimCustomer.customer_id.in_(existing_ids)).delete(synchronize_session=False)
-                
+
                 cust_objects = []
                 for _, row in df_cust.iterrows():
                     cust_objects.append(
                         DimCustomer(
-                            customer_id=row["customer_id"],
-                            name=row["name"],
-                            email=row["email"],
-                            country=row["country"],
-                            segment=row["segment"],
+                            customer_id=str(row["customer_id"]),
+                            name=str(row["name"]) if pd.notna(row["name"]) else "Unknown",
+                            email=str(row["email"]) if pd.notna(row["email"]) else "",
+                            country=str(row["country"]) if pd.notna(row["country"]) else "Other",
+                            segment=str(row["segment"]) if pd.notna(row["segment"]) else "Consumer",
                             signup_date=pd.to_datetime(row["signup_date"]).date(),
                             is_active=bool(row["is_active"]),
-                            customer_tier=row.get("customer_tier", "Bronze"),
-                            total_spend=float(row.get("total_spend", 0.0)),
-                            total_orders=int(row.get("total_orders", 0)),
-                            avg_order_value=float(row.get("avg_order_value", 0.0)),
+                            customer_tier=str(row.get("customer_tier") or "Bronze"),
+                            total_spend=float(row.get("total_spend") or 0.0),
+                            total_orders=int(row.get("total_orders") or 0),
+                            avg_order_value=float(row.get("avg_order_value") or 0.0),
                         )
                     )
                 session.bulk_save_objects(cust_objects)

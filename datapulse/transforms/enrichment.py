@@ -65,6 +65,11 @@ class DatasetEnricher:
         df_enriched["avg_order_value"] = df_enriched["avg_order_value"].fillna(0.0)
         df_enriched["days_since_last_order"] = df_enriched["days_since_last_order"].fillna(999).astype(int)
         df_enriched["customer_tier"] = df_enriched["customer_tier"].fillna("Bronze")
+        # Ensure NOT NULL fields are never NaN after merge
+        df_enriched["name"] = df_enriched["name"].fillna("Unknown").astype(str)
+        df_enriched["email"] = df_enriched["email"].fillna("").astype(str)
+        df_enriched["country"] = df_enriched["country"].fillna("Other").astype(str)
+        df_enriched["segment"] = df_enriched["segment"].fillna("Consumer").astype(str)
 
         return df_enriched
 
