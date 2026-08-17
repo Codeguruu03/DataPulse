@@ -58,8 +58,8 @@ class WarehouseLoader:
             if self.storage.exists(cust_parquet):
                 df_cust = self.storage.read_parquet(cust_parquet)
                 # Idempotent: delete existing IDs before re-inserting
-                existing_ids = set(df_cust["customer_id"])
-                session.query(DimCustomer).filter(DimCustomer.customer_id.isin(existing_ids)).delete(synchronize_session=False)
+                existing_ids = list(set(df_cust["customer_id"]))
+                session.query(DimCustomer).filter(DimCustomer.customer_id.in_(existing_ids)).delete(synchronize_session=False)
                 
                 cust_objects = []
                 for _, row in df_cust.iterrows():
@@ -86,8 +86,8 @@ class WarehouseLoader:
             # 2. Load Dimensions (Products)
             if self.storage.exists(prod_parquet):
                 df_prod = self.storage.read_parquet(prod_parquet)
-                existing_prod_ids = set(df_prod["product_id"])
-                session.query(DimProduct).filter(DimProduct.product_id.isin(existing_prod_ids)).delete(synchronize_session=False)
+                existing_prod_ids = list(set(df_prod["product_id"]))
+                session.query(DimProduct).filter(DimProduct.product_id.in_(existing_prod_ids)).delete(synchronize_session=False)
 
                 prod_objects = []
                 for _, row in df_prod.iterrows():
@@ -113,8 +113,9 @@ class WarehouseLoader:
             # 3. Load Fact Orders
             if self.storage.exists(orders_parquet_dir):
                 df_orders = self.storage.read_parquet(orders_parquet_dir)
-                existing_order_ids = set(df_orders["order_id"])
-                session.query(FactOrder).filter(FactOrder.order_id.isin(existing_order_ids)).delete(synchronize_session=False)
+                existing_order_ids = list(set(df_orders["order_id"]))
+                session.query(FactOrder).filter(FactOrder.order_id.in_(existing_order_ids)).delete(synchronize_session=False)
+
 
                 order_objects = []
                 for _, row in df_orders.iterrows():

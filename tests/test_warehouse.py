@@ -5,6 +5,7 @@ Tests for DataPulse Star Schema Warehouse, Migrations, and Analytical Marts.
 from pathlib import Path
 import pandas as pd
 import pytest
+from sqlalchemy import text
 
 from datapulse.warehouse.db import DatabaseManager
 from datapulse.warehouse.migrations import SchemaMigrator
@@ -21,8 +22,9 @@ def test_schema_migration_and_dim_date(tmp_path: Path):
     migrator.init_schema()
 
     with db_mgr.engine.connect() as conn:
-        res = conn.execute(pd.io.sql.text("SELECT COUNT(*) FROM dim_date;")).scalar()
+        res = conn.execute(text("SELECT COUNT(*) FROM dim_date;")).scalar()
         assert res > 1000  # calendar days populated
+
 
 
 def test_warehouse_loader_end_to_end(tmp_path: Path):
