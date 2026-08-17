@@ -38,13 +38,13 @@ def info():
     """Displays platform configuration and runtime status."""
     print_banner()
     console.print("[bold green]System Paths:[/bold green]")
-    console.print(f"  • Base Dir: [cyan]{settings.BASE_DIR}[/cyan]")
-    console.print(f"  • Raw Zone: [cyan]{settings.RAW_DATA_PATH}[/cyan]")
-    console.print(f"  • Processed Lake: [cyan]{settings.PROCESSED_DATA_PATH}[/cyan]")
-    console.print(f"  • Quarantine Zone: [cyan]{settings.QUARANTINE_DATA_PATH}[/cyan]")
+    console.print(f"  - Base Dir: [cyan]{settings.BASE_DIR}[/cyan]")
+    console.print(f"  - Raw Zone: [cyan]{settings.RAW_DATA_PATH}[/cyan]")
+    console.print(f"  - Processed Lake: [cyan]{settings.PROCESSED_DATA_PATH}[/cyan]")
+    console.print(f"  - Quarantine Zone: [cyan]{settings.QUARANTINE_DATA_PATH}[/cyan]")
     console.print("\n[bold green]Thresholds:[/bold green]")
-    console.print(f"  • Quality Gate Min Pass Rate: [yellow]{settings.QUALITY_THRESHOLD_PERCENT}%[/yellow]")
-    console.print(f"  • Max Duplicate Rate: [yellow]{settings.MAX_DUPLICATE_RATE * 100}%[/yellow]")
+    console.print(f"  - Quality Gate Min Pass Rate: [yellow]{settings.QUALITY_THRESHOLD_PERCENT}%[/yellow]")
+    console.print(f"  - Max Duplicate Rate: [yellow]{settings.MAX_DUPLICATE_RATE * 100}%[/yellow]")
 
 
 if __name__ == "__main__":

@@ -41,4 +41,4 @@ def generate(orders: int, customers: int, anomaly_rate: float, output_dir: str):
     table.add_row("Orders", str(orders), f"{anomaly_rate * 100:.1f}%", str(o_path))
 
     console.print(table)
-    console.print(f"[bold green]✔ Data successfully written to raw data zone: [cyan]{target_path}[/cyan][/bold green]")
+    console.print(f"[bold green][OK] Data successfully written to raw data zone: [cyan]{target_path}[/cyan][/bold green]")
