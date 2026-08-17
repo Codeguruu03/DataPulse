@@ -29,6 +29,10 @@ def cli():
     pass
 
 
+from datapulse.cli.generate import generate
+cli.add_command(generate)
+
+
 @cli.command()
 def info():
     """Displays platform configuration and runtime status."""
