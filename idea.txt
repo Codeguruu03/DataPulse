@@ -1,0 +1,791 @@
+DataPulse — Data Quality & Analytics Pipeline
+The core problem
+
+Companies receive sales/order/transaction data from multiple sources, and the data is often:
+
+duplicated
+incomplete
+inconsistent
+incorrectly formatted
+delayed
+containing invalid values
+
+The project answers one central question:
+
+"Can we automatically turn messy business data into a trusted analytics dataset and prove that the data is reliable before it reaches BI?"
+
+This is much better than building another "sales dashboard."
+
+What DataPulse does
+
+Imagine a company receives daily order data:
+
+orders.csv
+customers.csv
+products.csv
+
+The raw data might contain:
+
+Customer ID missing
+Duplicate orders
+Negative quantity
+Invalid dates
+Wrong product IDs
+Duplicate customers
+Different country formats
+NULL prices
+
+Your pipeline automatically:
+
+Raw Data
+   ↓
+Ingestion
+   ↓
+Validation
+   ↓
+Cleaning
+   ↓
+Transformation
+   ↓
+Data Quality Checks
+   ↓
+Parquet
+   ↓
+Analytics Dataset
+   ↓
+PostgreSQL / Redshift
+   ↓
+Power BI
+
+The important part:
+
+Bad data should never silently reach the dashboard.
+Architecture
+
+Your local architecture:
+
+                    DATA SOURCES
+                         │
+             ┌───────────┴───────────┐
+             │                       │
+          CSV Files              REST API
+             │                       │
+             └───────────┬───────────┘
+                         ↓
+                    Python
+                  Ingestion Layer
+                         ↓
+                    Raw Zone
+                         ↓
+                   Apache Spark
+                    / PySpark
+                         ↓
+               ┌─────────┴─────────┐
+               │                   │
+         Data Validation       Transformation
+               │                   │
+               └─────────┬─────────┘
+                         ↓
+                    Parquet
+                         ↓
+                  PostgreSQL
+                         ↓
+                    FastAPI
+                         ↓
+                    Power BI
+
+Airflow controls the whole pipeline.
+
+Airflow
+   │
+   ├── Ingest
+   ├── Validate
+   ├── Transform
+   ├── Quality Check
+   ├── Load
+   └── Notify
+Why this project is interesting
+
+The interesting part isn't:
+
+"I processed CSV files."
+
+The interesting part is:
+
+"I built a pipeline that knows whether its own data can be trusted."
+
+That gives you a very good interview topic:
+
+Data Quality Gate
+
+Before data reaches the warehouse:
+
+               Data Quality Gate
+
+
+                  Incoming Data
+                       │
+              ┌────────┴────────┐
+              │                 │
+            VALID             INVALID
+              │                 │
+              ↓                 ↓
+          Warehouse          Quarantine
+              │                 │
+              ↓                 ↓
+          Power BI          Error Report
+Example
+
+Suppose the incoming file contains:
+
+order_id	customer_id	quantity	price
+1001	C001	2	500
+1002	C002	-3	200
+1003	NULL	1	300
+1003	C003	1	300
+
+Your validation engine detects:
+
+❌ Negative quantity
+❌ Missing customer_id
+❌ Duplicate order_id
+
+Instead of loading everything:
+
+Valid records → Analytics warehouse
+Invalid records → Quarantine
+
+Then Power BI can show:
+
+Data Quality
+────────────────────
+
+
+Records Received        1,000,000
+Valid Records              987,420
+Rejected Records             12,580
+
+
+Quality Score                98.74%
+
+
+Duplicate Records             4,201
+Missing Values                3,890
+Invalid Values                4,489
+
+Now you've created something an actual data engineering team cares about.
+
+Technology Mapping
+Technology	Usage
+Python	ingestion, validation utilities
+SQL	analytical queries + quality checks
+PySpark	large-scale transformation
+Apache Spark	distributed processing
+Pandas	small-data exploration/validation
+Airflow	pipeline orchestration
+PostgreSQL	local warehouse
+Parquet	optimized data lake format
+FastAPI	expose pipeline/analytics APIs
+Power BI	analytics dashboard
+Docker	entire local environment
+Terraform	optional cloud infrastructure
+GitHub Actions	CI/CD
+AWS S3	optional cloud data lake
+AWS Glue	optional cloud ETL
+AWS Lambda	optional event trigger
+Redshift	optional cloud warehouse
+Beginner → Intermediate Roadmap
+
+Don't try to build everything on day one.
+
+Level 1 — Python + SQL
+
+Start with:
+
+CSV
+ ↓
+Python
+ ↓
+Pandas
+ ↓
+PostgreSQL
+
+Learn:
+
+CSV ingestion
+cleaning
+duplicates
+NULL handling
+SQL joins
+aggregations
+indexes
+Level 2 — Data Quality
+
+Add:
+
+Validation Engine
+
+Rules:
+
+order_id must be unique
+
+
+customer_id cannot be NULL
+
+
+quantity > 0
+
+
+price >= 0
+
+
+order_date must be valid
+
+
+customer must exist
+
+
+product must exist
+
+Create a data_quality_results table.
+
+Level 3 — PySpark
+
+Replace Pandas transformation for larger datasets:
+
+Raw CSV
+   ↓
+PySpark
+   ↓
+Cleaned Data
+   ↓
+Parquet
+
+Generate:
+
+data/
+├── raw/
+├── processed/
+└── quarantine/
+
+Partition Parquet by:
+
+year
+month
+
+For example:
+
+processed/
+  year=2026/
+    month=08/
+
+Now you're learning real data engineering concepts.
+
+Level 4 — Airflow
+
+Turn your scripts into an actual pipeline.
+
+DAG:
+
+start
+  ↓
+ingest_data
+  ↓
+validate_schema
+  ↓
+clean_data
+  ↓
+transform_data
+  ↓
+quality_gate
+  ↓
+write_parquet
+  ↓
+load_postgres
+  ↓
+refresh_analytics
+
+The important task:
+
+quality_gate
+
+If quality is below your threshold:
+
+Pipeline
+   ↓
+Quality = 91%
+   ↓
+Threshold = 95%
+   ↓
+❌ FAIL
+
+Airflow stops downstream processing.
+
+That's a strong concept to discuss in interviews.
+
+Level 5 — FastAPI
+
+Expose the processed data.
+
+Example APIs:
+
+GET /api/orders
+GET /api/customers
+GET /api/products
+GET /api/analytics/sales
+GET /api/quality/latest
+GET /api/pipeline/latest
+
+But don't turn this into a generic backend application.
+
+FastAPI exists only as a data access layer.
+
+Level 6 — Power BI
+
+Build one proper analytics dashboard.
+
+Executive View
+Total Revenue
+₹24.8M
+
+
+Orders
+148,290
+
+
+Customers
+38,420
+
+
+Average Order Value
+₹1,672
+
+
+Data Quality
+98.7%
+
+Then:
+
+Sales Analytics
+Revenue by month
+Revenue by product
+Revenue by region
+Top products
+Customer segments
+Data Quality
+Valid records
+Rejected records
+Duplicate records
+Missing values
+Quality trend
+
+This makes the project both Data Engineering + Analytics rather than just ETL.
+
+Level 7 — Docker
+
+Everything runs locally:
+
+Docker Compose
+│
+├── airflow
+├── postgres
+├── spark
+├── fastapi
+├── powerbi-compatible database
+└── data services
+
+Your goal:
+
+docker compose up
+
+and the complete environment starts.
+
+No AWS account required.
+
+Level 8 — CI/CD
+
+GitHub Actions:
+
+git push
+    ↓
+GitHub Actions
+    ↓
+Python tests
+    ↓
+SQL tests
+    ↓
+PySpark tests
+    ↓
+Docker build
+    ↓
+Pipeline validation
+
+You can add linting and unit tests later.
+
+AWS Mode
+
+This is where we follow your requirement very carefully.
+
+The application shouldn't be written specifically for AWS.
+
+Instead, create an abstraction:
+
+Storage Layer
+     │
+     ├── LocalStorage
+     │
+     └── S3Storage
+
+Locally:
+
+LocalStorage
+
+AWS:
+
+S3Storage
+
+Similarly:
+
+Warehouse
+   │
+   ├── PostgreSQL
+   │
+   └── Redshift
+
+Processing:
+
+Local Spark
+     │
+     └── AWS Glue
+
+Trigger:
+
+Airflow
+   │
+   └── AWS Lambda
+
+So your architecture becomes:
+
+              DataPulse
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+     LOCAL MODE          AWS MODE
+        │                   │
+        ↓                   ↓
+   Local Files             S3
+   PostgreSQL             Redshift
+   Spark                  Glue
+   Airflow                Lambda
+AWS Configuration
+
+The user shouldn't have to rewrite your code.
+
+Something like:
+
+DEPLOYMENT_MODE=local
+
+Local:
+
+STORAGE_BACKEND=local
+WAREHOUSE_BACKEND=postgres
+PROCESSING_ENGINE=spark
+
+AWS:
+
+DEPLOYMENT_MODE=aws
+
+
+STORAGE_BACKEND=s3
+WAREHOUSE_BACKEND=redshift
+PROCESSING_ENGINE=glue
+
+Then Terraform handles infrastructure.
+
+Terraform Structure
+terraform/
+
+
+├── modules/
+│   ├── s3/
+│   ├── redshift/
+│   ├── glue/
+│   └── lambda/
+│
+├── environments/
+│   ├── local/
+│   └── aws/
+│
+└── main.tf
+
+AWS deployment becomes:
+
+terraform init
+terraform plan
+terraform apply
+
+after configuring:
+
+AWS_REGION
+AWS_ACCOUNT_ID
+S3_BUCKET
+REDSHIFT_CLUSTER
+
+You can keep this entirely optional.
+
+A More Advanced Feature
+
+Once the basic project works, add:
+
+Data Lineage
+
+The system should tell you:
+
+Where did this dashboard number come from?
+
+Example:
+
+Power BI
+   │
+   ↓
+monthly_revenue
+   │
+   ↓
+sales_fact
+   │
+   ↓
+clean_orders
+   │
+   ↓
+raw_orders
+   │
+   ↓
+orders_2026_08.csv
+
+This is an excellent intermediate feature because it introduces a genuine data-engineering concept.
+
+Another Advanced Feature
+Pipeline Replay
+
+Suppose yesterday's data was bad.
+
+Instead of manually doing everything again:
+
+Pipeline Run #1024
+       ↓
+FAILED
+
+Admin chooses:
+
+Replay from validation
+
+Then:
+
+Raw Data
+   X
+   │
+Validation ← START
+   ↓
+Transform
+   ↓
+Warehouse
+
+This is a very nice feature for an engineering portfolio.
+
+Another Advanced Feature
+Schema Evolution
+
+Today's file:
+
+order_id
+customer_id
+product_id
+price
+
+Tomorrow:
+
+order_id
+customer_id
+product_id
+price
+discount
+
+Your pipeline detects:
+
+⚠ Schema changed
+
+
+Added:
+discount
+
+
+Removed:
+none
+
+
+Action:
+Compatible change
+
+
+Pipeline:
+CONTINUE
+
+But:
+
+price removed
+
+could produce:
+
+❌ Breaking schema change
+Pipeline stopped
+
+Now your project starts looking like a real production data platform.
+
+Final Architecture
+                           DataPulse
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        │                     │                     │
+     Ingestion            Processing            Analytics
+        │                     │                     │
+     Python                PySpark              FastAPI
+        │                  Spark SQL                │
+        │                     │                    Power BI
+        ↓                     ↓
+     Raw Zone             Parquet
+        │                     │
+        └──────────┬──────────┘
+                   ↓
+            Data Quality Gate
+                   │
+          ┌────────┴────────┐
+          │                 │
+        VALID             INVALID
+          │                 │
+          ↓                 ↓
+     PostgreSQL         Quarantine
+          │
+          ↓
+       Analytics
+          │
+          ↓
+       Power BI
+
+
+
+
+             Airflow
+                │
+      Orchestrates everything
+
+
+
+
+          Deployment
+              │
+       ┌──────┴──────┐
+       │             │
+      Local          AWS
+       │             │
+   Docker         Terraform
+       │             │
+   PostgreSQL       S3
+   Spark            Glue
+   Airflow          Redshift
+                    Lambda
+Recommended Project Phases
+
+Don't make the mistake of trying to use every technology immediately.
+
+🟢 Beginner
+
+Phase 1
+
+Python → Pandas → PostgreSQL → SQL
+
+Build the basic ingestion pipeline.
+
+🟢 Beginner+
+
+Phase 2
+
+Add:
+
+data validation
+quarantine
+data-quality scoring
+🟡 Intermediate
+
+Phase 3
+
+Add:
+
+PySpark
+Parquet
+partitioning
+🟡 Intermediate
+
+Phase 4
+
+Add:
+
+Airflow
+DAGs
+retries
+failure handling
+pipeline monitoring
+🟡 Intermediate+
+
+Phase 5
+
+Add:
+
+FastAPI
+Power BI
+analytics layer
+🟠 Advanced extension
+
+Phase 6
+
+Add:
+
+schema evolution
+lineage
+pipeline replay
+🔵 Cloud extension
+
+Phase 7
+
+Add optional AWS deployment:
+
+S3
+Glue
+Lambda
+Redshift
+Terraform
+Resume Project
+DataPulse — Data Quality-Aware Cloud Data Engineering Platform
+
+Python | SQL | PySpark | Apache Spark | Airflow | PostgreSQL | Parquet | FastAPI | Power BI | Docker | Terraform | AWS | GitHub Actions
+
+Built an end-to-end data engineering platform that ingests, validates, transforms, and serves large-scale business datasets while preventing low-quality data from reaching analytics systems. Implemented PySpark transformations, Parquet-based data lake storage, Airflow orchestration, automated data-quality gates, quarantine handling, schema validation, and Power BI analytics, with Docker-based local execution and optional Terraform-managed AWS deployment.
+
+Why I think this is a good fit for you
+
+The project has a very clear progression:
+
+Python/SQL → Data Engineering → Spark → Airflow → Analytics → DevOps → Cloud
+
+And you can build 90%+ of it for free on your laptop.
+
+Most importantly, when someone asks in an interview:
+
+"What problem did your project solve?"
+
+You have a clean answer:
+
+"DataPulse ensures that business data is trustworthy before it reaches analytics. It automatically detects data-quality and schema problems, quarantines invalid data, stops bad pipeline runs, and produces validated datasets for analytics."
+
+That's much stronger than saying:
+
+"I built an ETL pipeline using AWS Glue and S3."

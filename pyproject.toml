@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "datapulse"
+version = "0.1.0"
+description = "Data Quality-Aware Cloud Data Engineering Platform"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Codeguruu", email = "namananilgoyal@gmail.com"}
+]
+keywords = ["data-engineering", "data-quality", "pyspark", "airflow", "parquet", "fastapi", "terraform"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "pyarrow>=14.0.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.0.0",
+    "sqlalchemy>=2.0.0",
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "click>=8.1.7",
+    "rich>=13.7.0",
+    "python-dotenv>=1.0.0",
+    "Faker>=20.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.2.0"
+]
+spark = [
+    "pyspark>=3.5.0"
+]
+aws = [
+    "boto3>=1.34.0",
+    "psycopg2-binary>=2.9.9"
+]
+
+[project.scripts]
+datapulse = "datapulse.cli.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["datapulse*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
