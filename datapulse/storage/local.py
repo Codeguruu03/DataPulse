@@ -44,9 +44,12 @@ class LocalStorage(BaseStorage):
         partition_cols: Optional[List[str]] = None,
         index: bool = False,
     ) -> str:
+        import shutil
         target = self._resolve(path)
-        target.parent.mkdir(parents=True, exist_ok=True)
         if partition_cols:
+            if target.exists() and target.is_dir():
+                shutil.rmtree(target)
+            target.mkdir(parents=True, exist_ok=True)
             df.to_parquet(
                 target,
                 partition_cols=partition_cols,
@@ -55,6 +58,7 @@ class LocalStorage(BaseStorage):
                 compression="snappy",
             )
         else:
+            target.parent.mkdir(parents=True, exist_ok=True)
             df.to_parquet(
                 target,
                 index=index,
@@ -62,6 +66,7 @@ class LocalStorage(BaseStorage):
                 compression="snappy",
             )
         return str(target)
+
 
     def read_parquet(self, path: str) -> pd.DataFrame:
         target = self._resolve(path)
