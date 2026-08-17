@@ -1,6 +1,6 @@
 {
-  "run_id": "test-run-orchestrator-pass",
-  "timestamp": "2026-08-17T16:13:48.043960",
+  "run_id": "pipe-20260817161404-ebdf",
+  "timestamp": "2026-08-17T16:14:04.856411",
   "records_processed": {
     "customers": 498,
     "products": 12,
