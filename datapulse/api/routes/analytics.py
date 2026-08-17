@@ -34,7 +34,10 @@ def get_executive_summary(db: Session = Depends(get_db_session)) -> Dict[str, An
             "overall_quality_score": float(latest_quality_score),
         }
     except Exception:
-        # Fallback when warehouse tables are not yet loaded
+        try:
+            db.rollback()
+        except Exception:
+            pass
         return {
             "total_revenue": 0.0,
             "total_orders": 0,
@@ -53,6 +56,10 @@ def get_monthly_revenue(db: Session = Depends(get_db_session)) -> List[Dict[str,
         ).mappings().all()
         return [dict(r) for r in rows]
     except Exception:
+        try:
+            db.rollback()
+        except Exception:
+            pass
         return []
 
 
@@ -65,6 +72,10 @@ def get_top_products(db: Session = Depends(get_db_session)) -> List[Dict[str, An
         ).mappings().all()
         return [dict(r) for r in rows]
     except Exception:
+        try:
+            db.rollback()
+        except Exception:
+            pass
         return []
 
 
@@ -77,4 +88,8 @@ def get_customer_segments(db: Session = Depends(get_db_session)) -> List[Dict[st
         ).mappings().all()
         return [dict(r) for r in rows]
     except Exception:
+        try:
+            db.rollback()
+        except Exception:
+            pass
         return []

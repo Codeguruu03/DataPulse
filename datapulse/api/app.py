@@ -39,6 +39,14 @@ def create_app() -> FastAPI:
     app.include_router(quality_router, prefix="/api/v1")
     app.include_router(pipeline_router, prefix="/api/v1")
 
+    # Auto-initialize warehouse star schema & views
+    try:
+        from datapulse.warehouse.migrations import SchemaMigrator
+        from datapulse.warehouse.db import default_db_manager
+        SchemaMigrator(default_db_manager).init_schema()
+    except Exception:
+        pass
+
     # Static UI Dashboard
     static_dir = Path(__file__).resolve().parent / "static"
     if static_dir.exists():

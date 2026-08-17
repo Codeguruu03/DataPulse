@@ -23,6 +23,10 @@ def get_quality_metrics(db: Session = Depends(get_db_session)) -> List[Dict[str,
         ).mappings().all()
         return [dict(r) for r in rows]
     except Exception:
+        try:
+            db.rollback()
+        except Exception:
+            pass
         return []
 
 
@@ -35,6 +39,10 @@ def get_quality_trends(db: Session = Depends(get_db_session)) -> List[Dict[str, 
         ).mappings().all()
         return [dict(r) for r in rows]
     except Exception:
+        try:
+            db.rollback()
+        except Exception:
+            pass
         return []
 
 
