@@ -28,6 +28,9 @@ class PipelineReplayController:
         self,
         replay_run_id: str,
         threshold: float = 95.0,
+        raw_customers_path: Optional[str] = None,
+        raw_products_path: Optional[str] = None,
+        raw_orders_path: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Replays pipeline stages starting from Quality Gate Validation using existing raw files.
@@ -35,7 +38,12 @@ class PipelineReplayController:
         logger.info(f"Initiating pipeline replay for run [{replay_run_id}] from checkpoint [VALIDATION]...")
         
         gate = DataQualityGate(storage=self.storage, quality_threshold=threshold)
-        passed, summary, valid_datasets = gate.evaluate_pipeline_batch(run_id=replay_run_id)
+        passed, summary, valid_datasets = gate.evaluate_pipeline_batch(
+            raw_customers_path=raw_customers_path,
+            raw_products_path=raw_products_path,
+            raw_orders_path=raw_orders_path,
+            run_id=replay_run_id,
+        )
 
         if not passed:
             logger.error(f"Replay run [{replay_run_id}] failed quality gate ({summary.overall_quality_score:.2f}% < {threshold}%).")

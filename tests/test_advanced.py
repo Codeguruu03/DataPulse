@@ -51,10 +51,26 @@ def test_schema_evolution_detector():
     assert "customer_id" in rep_broken.missing_required_columns
 
 
-def test_pipeline_replay_execution():
-    controller = PipelineReplayController()
-    res = controller.replay_from_validation(replay_run_id="replay-test-001", threshold=90.0)
+def test_pipeline_replay_execution(tmp_path: Path):
+    from datapulse.storage.local import LocalStorage
+    from datapulse.generator.generator import DataPulseGenerator
+
+    storage = LocalStorage(base_path=str(tmp_path))
+    gen = DataPulseGenerator(anomaly_rate=0.05, seed=10)
+    raw_dir = tmp_path / "raw"
+    c_f, p_f, o_f = gen.generate_all_and_save(output_dir=raw_dir, num_orders=100, num_customers=30)
+
+    controller = PipelineReplayController(storage=storage)
+    res = controller.replay_from_validation(
+        replay_run_id="replay-test-001",
+        threshold=90.0,
+        raw_customers_path=str(c_f),
+        raw_products_path=str(p_f),
+        raw_orders_path=str(o_f),
+    )
 
     assert res["status"] == "SUCCESS"
     assert res["checkpoint"] == "VALIDATION"
     assert res["orders_replayed"] > 0
+
+
