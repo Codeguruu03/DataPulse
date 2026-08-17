@@ -34,10 +34,16 @@ jobs:
           pip install -e .
 
       - name: Run Pytest Test Suite
+        env:
+          PYTHONPATH: .
+          WAREHOUSE_BACKEND: sqlite
         run: |
           python -m pytest -v --tb=short
 
       - name: Execute CLI Smoke Test
+        env:
+          PYTHONPATH: .
+          WAREHOUSE_BACKEND: sqlite
         run: |
           python -m datapulse.cli.main info
           python -m datapulse.cli.main generate --orders 500 --customers 50 --anomaly-rate 0.05
