@@ -47,9 +47,13 @@ data/raw/*.json
 data/processed/**/*.parquet
 data/quarantine/*.csv
 data/quarantine/*.json
+raw/
+processed/
+quarantine/
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/quarantine/.gitkeep
+
 
 # Logs & Environment
 *.log
