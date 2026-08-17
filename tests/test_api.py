@@ -51,7 +51,8 @@ def test_pipeline_status_and_trigger(client):
 
     trigger_resp = client.post(
         "/api/v1/pipeline/trigger",
-        json={"threshold": 95.0, "anomaly_rate": 0.05, "auto_generate": False},
+        json={"threshold": 95.0, "anomaly_rate": 0.05, "auto_generate": True},
     )
+
     assert trigger_resp.status_code == 200
     assert trigger_resp.json()["status"] == "ACCEPTED"

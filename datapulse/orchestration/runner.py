@@ -58,7 +58,8 @@ class PipelineRunner:
         # Stage 1: Ingestion / Generation
         logger.info(">>> [Stage 1/5] Ingestion & Raw Staging...")
         t0 = time.time()
-        if self.auto_generate:
+        raw_cust = settings.RAW_DATA_PATH / "customers.csv"
+        if not raw_cust.exists() or self.auto_generate:
             gen = DataPulseGenerator(anomaly_rate=self.anomaly_rate)
             c, p, o = gen.generate_all_and_save()
             run_result["stages"]["ingestion"] = {
@@ -71,6 +72,7 @@ class PipelineRunner:
                 "status": "SKIPPED_EXISTING",
                 "duration_sec": round(time.time() - t0, 2),
             }
+
 
         # Stage 2: Quality Gate Evaluation
         logger.info(">>> [Stage 2/5] Data Quality Gate Evaluation...")
