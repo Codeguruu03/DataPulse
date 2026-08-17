@@ -49,10 +49,10 @@ class WarehouseLoader:
         load_stats = {"customers_loaded": 0, "products_loaded": 0, "orders_loaded": 0, "audit_records_loaded": 0}
 
         try:
-            base_processed = str(settings.PROCESSED_DATA_PATH)
-            cust_parquet = f"{base_processed}/dim_customers/customers.parquet"
-            prod_parquet = f"{base_processed}/dim_products/products.parquet"
-            orders_parquet_dir = f"{base_processed}/fact_orders"
+            cust_parquet = "processed/dim_customers/customers.parquet" if self.storage.exists("processed/dim_customers/customers.parquet") else f"{settings.PROCESSED_DATA_PATH}/dim_customers/customers.parquet"
+            prod_parquet = "processed/dim_products/products.parquet" if self.storage.exists("processed/dim_products/products.parquet") else f"{settings.PROCESSED_DATA_PATH}/dim_products/products.parquet"
+            orders_parquet_dir = "processed/fact_orders" if self.storage.exists("processed/fact_orders") else f"{settings.PROCESSED_DATA_PATH}/fact_orders"
+
 
             # 1. Load Dimensions (Customers)
             if self.storage.exists(cust_parquet):
@@ -150,8 +150,9 @@ class WarehouseLoader:
 
 
             # 4. Load Quality & Quarantine Audit logs if present
-            quarantine_dir = str(settings.QUARANTINE_DATA_PATH)
+            quarantine_dir = "quarantine" if self.storage.exists("quarantine") else str(settings.QUARANTINE_DATA_PATH)
             audit_files = self.storage.list_files(quarantine_dir, suffix=".json")
+
             for f_path in audit_files:
                 if "quality_report_" in f_path:
                     data = self.storage.read_json(f_path)

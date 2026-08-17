@@ -134,8 +134,9 @@ class DataQualityGate:
         )
 
         # Save summary report to storage
-        summary_path = f"{settings.QUARANTINE_DATA_PATH}/quality_report_{batch_id}.json"
+        summary_path = f"quarantine/quality_report_{batch_id}.json"
         self.storage.write_json(summary.model_dump(mode="json"), summary_path)
+
 
         if gate_passed:
             logger.info(

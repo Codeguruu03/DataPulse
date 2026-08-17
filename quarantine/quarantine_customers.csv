@@ -1,0 +1,3 @@
+quarantine_id,run_id,dataset,quarantine_timestamp,error_reasons,customer_id,name,email,country,segment,signup_date,is_active
+Q-pipe-20260817170515-c0ef-customers-00000,pipe-20260817170515-c0ef,customers,2026-08-17T17:05:16.252036,customer_id is null or empty,,Luis Torres,arianadiaz@benjamin-jackson.com,Ind,Home Office,2024-09-02,True
+Q-pipe-20260817170515-c0ef-customers-00001,pipe-20260817170515-c0ef,customers,2026-08-17T17:05:16.252036,customer_id is null or empty,,Justin Short,kylesullivan@rodriguez.biz,United States,Small Business,2025-01-06,True

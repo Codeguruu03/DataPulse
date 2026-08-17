@@ -51,11 +51,12 @@ class LakehouseTransformPipeline:
         enriched_customers = DatasetEnricher.enrich_customers(clean_customers, clean_orders)
         enriched_products = DatasetEnricher.enrich_products(clean_products, clean_orders)
 
-        # 3. Target Parquet storage paths
-        base_processed = f"{settings.PROCESSED_DATA_PATH}"
+        # 3. Target Parquet storage paths (relative to storage root)
+        base_processed = "processed"
         customers_parquet_path = f"{base_processed}/dim_customers/customers.parquet"
         products_parquet_path = f"{base_processed}/dim_products/products.parquet"
         orders_parquet_path = f"{base_processed}/fact_orders"
+
 
         # 4. Write Parquet with Year/Month partitioning for orders
         logger.info("Writing enriched datasets to Parquet lakehouse...")

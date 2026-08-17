@@ -49,8 +49,9 @@ class QuarantineManager:
             })
 
         df_quarantine = pd.DataFrame(enriched_records)
-        quarantine_file_csv = f"{settings.QUARANTINE_DATA_PATH}/quarantine_{dataset_name}.csv"
-        quarantine_file_json = f"{settings.QUARANTINE_DATA_PATH}/quarantine_audit_{run_id}_{dataset_name}.json"
+        quarantine_file_csv = f"quarantine/quarantine_{dataset_name}.csv"
+        quarantine_file_json = f"quarantine/quarantine_audit_{run_id}_{dataset_name}.json"
+
 
         # Write to storage
         self.storage.write_csv(df_quarantine, quarantine_file_csv)
