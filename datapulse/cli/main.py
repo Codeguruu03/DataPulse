@@ -30,7 +30,9 @@ def cli():
 
 
 from datapulse.cli.generate import generate
+from datapulse.cli.validate import validate
 cli.add_command(generate)
+cli.add_command(validate)
 
 
 @cli.command()
