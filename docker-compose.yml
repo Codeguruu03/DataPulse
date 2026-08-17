@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Data Warehouse
+  postgres:
+    image: postgres:16-alpine
+    container_name: datapulse-postgres
+    environment:
+      POSTGRES_USER: ${WAREHOUSE_USER:-postgres}
+      POSTGRES_PASSWORD: ${WAREHOUSE_PASSWORD:-postgres}
+      POSTGRES_DB: ${WAREHOUSE_DB:-datapulse_dw}
+    ports:
+      - "${WAREHOUSE_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. DataPulse FastAPI & Analytics Dashboard
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: datapulse-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DEPLOYMENT_MODE=local
+      - STORAGE_BACKEND=local
+      - WAREHOUSE_BACKEND=postgres
+      - WAREHOUSE_HOST=postgres
+      - WAREHOUSE_PORT=5432
+      - WAREHOUSE_DB=datapulse_dw
+      - WAREHOUSE_USER=postgres
+      - WAREHOUSE_PASSWORD=postgres
+      - QUALITY_THRESHOLD_PERCENT=95.0
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    command: uvicorn datapulse.api.app:app --host 0.0.0.0 --port 8000 --reload
+
+  # 3. Airflow Webserver & Scheduler
+  airflow:
+    image: apache/airflow:2.8.1-python3.11
+    container_name: datapulse-airflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@postgres:5432/datapulse_dw
+      - AIRFLOW__CORE__FERNET_KEY=46BKJoPlCSetupRandomKeyForDataPulsePlatform12345=
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__RBAC=False
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+      - .:/opt/airflow/datapulse_root
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "airflow db init &&
+               airflow users create --username admin --password admin --firstname Data --lastname Pulse --role Admin --email admin@datapulse.io &&
+               airflow webserver & airflow scheduler"
+
+volumes:
+  postgres_data:
