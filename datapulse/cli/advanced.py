@@ -45,15 +45,17 @@ def show_lineage(target: str):
 @click.option("--file", "-f", default=None, help="Path to incoming CSV file to evaluate schema against baseline.")
 def check_evolution(dataset: str, file: str):
     """Evaluates incoming dataset for schema drift (compatible extension vs breaking changes)."""
+    from datapulse.config import settings
     detector = SchemaEvolutionDetector()
     
-    if file:
-        df = pd.read_csv(file)
-    else:
-        # Check current raw file
-        df = pd.read_csv(f"data/raw/{dataset}.csv")
+    target_path = Path(file) if file else settings.RAW_DATA_PATH / f"{dataset}.csv"
+    if not target_path.exists():
+        console.print(f"[bold yellow]File not found: {target_path}. Run 'datapulse generate' first.[/bold yellow]")
+        return
 
+    df = pd.read_csv(target_path)
     report = detector.evaluate_schema(dataset, df)
+
 
     verdict_color = "green" if report.verdict != EvolutionVerdict.BREAKING_CHANGE else "red"
     summary_text = (

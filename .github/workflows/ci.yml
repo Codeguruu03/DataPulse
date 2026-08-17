@@ -15,6 +15,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Set up Java 17 (for PySpark)
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -29,7 +35,7 @@ jobs:
 
       - name: Run Pytest Test Suite
         run: |
-          pytest -v --tb=short
+          python -m pytest -v --tb=short
 
       - name: Execute CLI Smoke Test
         run: |
