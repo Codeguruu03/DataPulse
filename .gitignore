@@ -62,6 +62,8 @@ logs/
 .env.local
 
 # Spark / Warehouse local files
+*.db
+data/*.db
 metastore_db/
 derby.log
 spark-warehouse/

@@ -15,11 +15,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Java 17 (for PySpark)
+      - name: Set up Java 11 (Stable for PySpark)
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: "17"
+          java-version: "11"
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -39,7 +39,7 @@ jobs:
           WAREHOUSE_BACKEND: sqlite
           SPARK_LOCAL_IP: 127.0.0.1
         run: |
-          python -m pytest -v --tb=short -rA
+          python -m pytest -v --tb=short
 
       - name: Execute CLI Smoke Test
         env:
@@ -56,3 +56,4 @@ jobs:
           python -m datapulse.cli.main warehouse mart monthly_revenue
           python -m datapulse.cli.main lineage --target v_mart_monthly_revenue
           python -m datapulse.cli.main evolution --dataset orders
+
